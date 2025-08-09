@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Pet Weight Calculator</title>
+  <style>
+    :root{
+      --bg:#08151a;
+      --card:#0f2a2f;
+      --muted:#9fb6b8;
+      --accent:#7ee7c7;
+      --accent-2:#64b5f6;
+      --glass: rgba(255,255,255,0.04);
+      --glass-2: rgba(255,255,255,0.02);
+      --card-radius:18px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(80,160,150,0.08), transparent),
+                  linear-gradient(180deg, #052326 0%, #071a1d 50%, #021014 100%),
+                  var(--bg);
+      color: #e6fbf2;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .container{
+      width:100%;
+      max-width:1100px;
+      display:grid;
+      grid-template-columns: 1fr 400px;
+      gap:20px;
+      align-items:start;
+    }
+    @media (max-width:900px){
+      .container{grid-template-columns:1fr;}
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:var(--card-radius);
+      padding:20px;
+      box-shadow: 0 8px 30px rgba(5,30,30,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+      border:1px solid rgba(255,255,255,0.03);
+    }
+    header h1{margin:0;font-size:clamp(18px, 4vw, 22px);letter-spacing:0.2px}
+    header p{color:var(--muted);margin:6px 0 0;font-size:clamp(12px, 3vw, 14px)}
+    .controls{display:flex;flex-direction:column;gap:14px;margin-top:18px}
+    .row{display:flex;flex-wrap:wrap;gap:12px}
+    .field{background:var(--glass);padding:12px;border-radius:12px;flex:1;border:1px solid rgba(255,255,255,0.02);min-width:140px}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    input[type=number]{background:transparent;border:0;outline:none;color:inherit;width:100%;font-size:15px}
+    .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+    .btn{padding:10px 14px;border-radius:12px;border:0;cursor:pointer;font-weight:600;flex:1;min-width:100px}
+    .btn-primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#042225}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--accent)}
+    .result{margin-top:18px;padding:14px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.02)}
+    .big{font-size:clamp(22px, 5vw, 28px);font-weight:700}
+    .muted{color:var(--muted);font-size:13px}
+    .panel-right{position:sticky;top:20px}
+    @media (max-width:900px){.panel-right{position:relative;top:0}}
+    .guide{font-size:13px;color:var(--muted);line-height:1.5}
+    .badge{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.02);font-weight:700}
+    .classification{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .class-item{padding:8px 10px;border-radius:10px;background:var(--glass-2);border:1px solid rgba(255,255,255,0.02);font-weight:600}
+    footer{margin-top:18px;color:var(--muted);font-size:12px}
+    .small{font-size:12px;color:var(--muted)}
+    .error{color:#ffb4b4;background:rgba(255,180,180,0.03);padding:8px;border-radius:8px;border:1px solid rgba(255,180,180,0.06);font-weight:600}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <header>
+        <h1>Pet Weight Calculator</h1>
+        <p>Estimate a pet's weight at another age or the age it will reach a target weight — based on the game's growth formula.</p>
+      </header>
+
+      <div class="controls">
+        <div class="row">
+          <div class="field">
+            <label>Current weight (kg)</label>
+            <input id="W1" type="number" step="0.01" min="0.001" placeholder="e.g. 5" />
+          </div>
+          <div class="field">
+            <label>Current age (years)</label>
+            <input id="A1" type="number" step="0.1" min="0" placeholder="e.g. 2" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>New age (years) — for weight prediction</label>
+            <input id="A2" type="number" step="0.1" min="0" placeholder="e.g. 10" />
+          </div>
+          <div class="field">
+            <label>Target weight (kg) — for age prediction</label>
+            <input id="W2" type="number" step="0.01" min="0.001" placeholder="e.g. 20" />
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" id="calcWeight">Predict Weight</button>
+          <button class="btn btn-primary" id="calcAge">Predict Age</button>
+          <button class="btn btn-ghost" id="clear">Clear</button>
+        </div>
+
+        <div id="errorBox" style="display:none;margin-top:10px" class="error"></div>
+
+        <div class="result" id="resultBox" style="display:none">
+          <div class="small">Result</div>
+          <div id="resultMain" class="big">—</div>
+          <div id="resultMeta" class="muted" style="margin-top:8px">Formula used: <code id="formula" style="background:rgba(255,255,255,0.03);padding:4px;border-radius:6px">—</code></div>
+          <div style="margin-top:10px" id="classificationArea"></div>
+        </div>
+
+        <footer>
+          <div class="small">Notes: Uses W₂ = (W₁ / (A₁ + 10)) × (A₂ + 10). Age formula: A₂ = (W₂ / W₁) × (A₁ + 10) − 10. ~2% error typical.</div>
+        </footer>
+      </div>
+    </div>
+
+    <aside class="panel-right card">
+      <div class="guide">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div class="badge">Visual Guide</div>
+          </div>
+          <div class="small">v1.0</div>
+        </div>
+
+        <h3 style="margin-top:14px;margin-bottom:6px">Weight classifications</h3>
+        <div class="classification">
+          <div class="class-item">Small: W &lt; 1 kg</div>
+          <div class="class-item">Normal: 1 ≤ W &lt; 5 kg</div>
+          <div class="class-item">Huge: 5 ≤ W &lt; 7 kg</div>
+          <div class="class-item">Titanic: 8 ≤ W &lt; 9 kg</div>
+          <div class="class-item">Godly: W ≥ 9 kg</div>
+        </div>
+
+        <h3 style="margin-top:14px;margin-bottom:6px">How it works</h3>
+        <p class="muted small">The model assumes a pet gains 1/11th of its starting weight every year so weight scales linearly with (age + 10). Use the left form to calculate either new weight (enter new age) or the age to reach a target weight (enter target weight).</p>
+
+        <h3 style="margin-top:12px;margin-bottom:6px">Quick presets</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost" onclick="preset(5,2)">W=5kg, A=2yr</button>
+          <button class="btn btn-ghost" onclick="preset(1.2,1)">W=1.2kg, A=1yr</button>
+          <button class="btn btn-ghost" onclick="preset(20,4)">W=20kg, A=4yr</button>
+        </div>
+
+        <hr style="border:none;height:1px;background:rgba(255,255,255,0.02);margin:14px 0;border-radius:2px" />
+        <div class="small">Made for quick estimates. If you want CSV export, dark/light switch, or a React port, ask and I’ll extend it.</div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    // Core formulas from the source
+    function predictWeight(W1, A1, A2){
+      return (W1 / (A1 + 10)) * (A2 + 10);
+    }
+    function predictAge(W1, A1, W2){
+      return (W2 / W1) * (A1 + 10) - 10;
+    }
+
+    function classifyWeight(W){
+      if (W < 1) return 'Small';
+      if (W >=1 && W < 5) return 'Normal';
+      if (W >=5 && W < 7) return 'Huge';
+      if (W >=8 && W < 9) return 'Titanic';
+      return 'Godly';
+    }
+
+    function el(id){return document.getElementById(id)}
+
+    const calcWeightBtn = el('calcWeight');
+    const calcAgeBtn = el('calcAge');
+    const clearBtn = el('clear');
+    const resultBox = el('resultBox');
+    const resultMain = el('resultMain');
+    const resultMeta = el('resultMeta');
+    const formulaEl = el('formula');
+    const errorBox = el('errorBox');
+    const classificationArea = el('classificationArea');
+
+    function showError(msg){ errorBox.innerText = msg; errorBox.style.display = 'block'; resultBox.style.display='none'; }
+    function hideError(){ errorBox.style.display = 'none'; }
+
+    calcWeightBtn.addEventListener('click', ()=>{
+      hideError();
+      const W1 = parseFloat(el('W1').value);
+      const A1 = parseFloat(el('A1').value);
+      const A2 = parseFloat(el('A2').value);
+
+      if (!isFinite(W1) || W1 <= 0) return showError('Please enter a valid current weight > 0.');
+      if (!isFinite(A1) || A1 < 0) return showError('Please enter a valid current age (≥ 0).');
+      if (!isFinite(A2) || A2 < 0) return showError('Please enter a valid new age (≥ 0).');
+
+      const W2 = predictWeight(W1,A1,A2);
+      resultBox.style.display = 'block';
+      resultMain.innerText = W2.toFixed(2) + ' kg';
+      formulaEl.innerText = 'W₂ = (W₁ / (A₁ + 10)) × (A₂ + 10)';
+      classificationArea.innerHTML = `<div class="small">Classification: <strong>${classifyWeight(W2)}</strong></div>`;
+    });
+
+    calcAgeBtn.addEventListener('click', ()=>{
+      hideError();
+      const W1 = parseFloat(el('W1').value);
+      const A1 = parseFloat(el('A1').value);
+      const W2 = parseFloat(el('W2').value);
+
+      if (!isFinite(W1) || W1 <= 0) return showError('Please enter a valid current weight > 0.');
+      if (!isFinite(A1) || A1 < 0) return showError('Please enter a valid current age (≥ 0).');
+      if (!isFinite(W2) || W2 <= 0) return showError('Please enter a valid target weight > 0.');
+
+      const A2 = predictAge(W1,A1,W2);
+      if (!isFinite(A2) || A2 < 0) {
+        showError('Based on inputs, the target weight is already reached or impossible with these values.');
+        return;
+      }
+      resultBox.style.display = 'block';
+      resultMain.innerText = A2.toFixed(2) + ' years';
+      formulaEl.innerText = 'A₂ = (W₂ / W₁) × (A₁ + 10) − 10';
+      classificationArea.innerHTML = `<div class="small">When the pet reaches ${W2.toFixed(2)} kg it will be classified as <strong>${classifyWeight(W2)}</strong>.</div>`;
+    });
+
+    clearBtn.addEventListener('click', ()=>{
+      ['W1','A1','A2','W2'].forEach(id=>el(id).value='');
+      resultBox.style.display='none'; hideError(); classificationArea.innerHTML='';
+    });
+
+    function preset(w,a){ el('W1').value = w; el('A1').value = a; }
+  </script>
+</body>
+</html>
